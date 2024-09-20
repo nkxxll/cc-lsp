@@ -62,6 +62,10 @@ feat: new commit`, true, "feat: new commit"},
 		{`# this is a comment
 
 feat: this is also only a right line with a # comment`, true, "feat: this is also only a right line with a # comment"},
+		{`
+
+
+`, false, ""},
 	}
 	for idx, tc := range texts {
 		expected := "feat: new commit"
