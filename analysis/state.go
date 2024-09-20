@@ -16,9 +16,12 @@ func NewState() State {
 	return State{Documents: map[string]string{}}
 }
 
+// diagnoseNoConventionalCommitMsg evaluates the first line that has text in
+// the git commit and returns an diagnose if the line does not match a
+// conventional commit format
 func diagnoseNoConventionalCommitMsg(text string) (lsp.Diagnostic, bool) {
 	// todo: expand the list to the angular conventional commits
-	prefixes := []string{"feat", "fix", "chore"}
+	prefixes := []string{"feat", "fix", "chore", "test", "docs"}
 	middleRegex := ""
 	for _, item := range prefixes {
 		middleRegex += regexp.QuoteMeta(item) + "|"
@@ -41,6 +44,7 @@ func diagnoseNoConventionalCommitMsg(text string) (lsp.Diagnostic, bool) {
 	return lsp.Diagnostic{}, false
 }
 
+// getFirstLine gets the first line from the git commit that is not empty or a comment
 func getFirstLine(text string) (string, bool) {
 	lines := strings.Split(text, "\n")
 	for _, line := range lines {

@@ -11,12 +11,13 @@ func TestConventionalCommitPrefix(t *testing.T) {
 		line     string
 		expected bool
 	}{
-		{"feat(main): add new feature", false}, // Starts with a conventional prefix
-		{"fix: correct a bug", false},          // Starts with a conventional prefix
-		{"chore: clean up codebase", false},    // Starts with a conventional prefix
-		{"docs: update documentation", true},   // Does not start with a conventional prefix
-		{"refactor: change structure", true},   // Does not start with a conventional prefix
-		{"test: add unit tests", true},         // Does not start with a conventional prefix
+		{"feat(main): add new feature", false},    // Starts with a conventional prefix
+		{"fix: correct a bug", false},             // Starts with a conventional prefix
+		{"test(stats): clean up codebase", false}, // Starts with a conventional prefix
+		{"doggoo: update documentation", true},    // Does not start with a conventional prefix
+		{"blueberry: change structure", true},     // Does not start with a conventional prefix
+		{"yeet: add unit tests", true},            // Does not start with a conventional prefix
+		{"this is any message", true},             // Does not start with a conventional prefix
 	}
 
 	var diagnostics []lsp.Diagnostic
@@ -31,8 +32,8 @@ func TestConventionalCommitPrefix(t *testing.T) {
 		}
 	}
 
-	if len(diagnostics) != 3 {
-		t.Fatalf("diagnostics should be 3 long is %d long", len(diagnostics))
+	if len(diagnostics) != 4 {
+		t.Fatalf("diagnostics should be 4 long is %d long", len(diagnostics))
 	}
 
 	for _, item := range diagnostics {

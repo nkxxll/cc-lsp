@@ -12,7 +12,8 @@ import (
 )
 
 func main() {
-	logger := getLogger("/home/nkxxll/git/cc-lsp/log.txt")
+	home := os.Getenv("HOME")
+	logger := getLogger(home + "/git/cc-lsp/log.txt")
 	logger.Println("Hey, I started!")
 
 	scanner := bufio.NewScanner(os.Stdin)
