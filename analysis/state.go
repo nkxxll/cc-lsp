@@ -3,6 +3,7 @@ package analysis
 import (
 	"cc-lsp/lsp"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -15,28 +16,45 @@ func NewState() State {
 	return State{Documents: map[string]string{}}
 }
 
+func diagnoseNoConventionalCommitMsg(text string) (lsp.Diagnostic, bool) {
+	// List of prefixes (you can expand this list as needed)
+	prefixes := []string{"feat", "fix", "chore"}
+	middleRegex := ""
+	for _, item := range prefixes {
+		middleRegex += regexp.QuoteMeta(item) + "|"
+	}
+
+	// Build the regex pattern dynamically based on the list of prefixes
+	pattern := `^(?:` + middleRegex + `)(?:\(.+\))?:\s+`
+
+	// Compile the regex
+	re := regexp.MustCompile(pattern)
+	if re.FindStringIndex(text) == nil {
+		diagnostic := lsp.Diagnostic{
+			Range:    LineRange(0, 0, 0),
+			Severity: 1,
+			Source:   "cc-lint",
+			Message:  "First line should start with the type of the commit in a conventional commit. (e.g. feat, fix, ...)",
+		}
+		return diagnostic, true
+	}
+	return lsp.Diagnostic{}, false
+}
+
 func getDiagnosticsForFile(text string) []lsp.Diagnostic {
 	diagnostics := []lsp.Diagnostic{}
-	for row, line := range strings.Split(text, "\n") {
-		if strings.Contains(line, "VS Code") {
-			idx := strings.Index(line, "VS Code")
-			diagnostics = append(diagnostics, lsp.Diagnostic{
-				Range:    LineRange(row, idx, idx+len("VS Code")),
-				Severity: 1,
-				Source:   "Common Sense",
-				Message:  "Please make sure we use good language in this video",
-			})
+	before, _, found := strings.Cut(text, "\n")
+
+	// see if the line starts with a conventional commit type like: feat, fix, ...
+	if !found {
+		diagnose, found := diagnoseNoConventionalCommitMsg(text)
+		if found {
+			diagnostics = append(diagnostics, diagnose)
 		}
-
-		if strings.Contains(line, "Neovim") {
-			idx := strings.Index(line, "Neovim")
-			diagnostics = append(diagnostics, lsp.Diagnostic{
-				Range:    LineRange(row, idx, idx+len("Neovim")),
-				Severity: 2,
-				Source:   "Common Sense",
-				Message:  "Great choice :)",
-			})
-
+	} else {
+		diagnose, found := diagnoseNoConventionalCommitMsg(before)
+		if found {
+			diagnostics = append(diagnostics, diagnose)
 		}
 	}
 
