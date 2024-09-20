@@ -44,7 +44,7 @@ func diagnoseNoConventionalCommitMsg(text string) (lsp.Diagnostic, bool) {
 func getFirstLine(text string) (string, bool) {
 	lines := strings.Split(text, "\n")
 	for _, line := range lines {
-		if strings.HasPrefix(line, "#") {
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 		return line, true
@@ -53,6 +53,7 @@ func getFirstLine(text string) (string, bool) {
 }
 
 func getDiagnosticsForFile(text string) []lsp.Diagnostic {
+	// todo: do we want to lint trailing white space?
 	diagnostics := []lsp.Diagnostic{}
 	firstLine, ok := getFirstLine(text)
 
