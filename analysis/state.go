@@ -17,7 +17,7 @@ func NewState() State {
 }
 
 func diagnoseNoConventionalCommitMsg(text string) (lsp.Diagnostic, bool) {
-	// List of prefixes (you can expand this list as needed)
+	// todo: expand the list to the angular conventional commits
 	prefixes := []string{"feat", "fix", "chore"}
 	middleRegex := ""
 	for _, item := range prefixes {
@@ -41,18 +41,24 @@ func diagnoseNoConventionalCommitMsg(text string) (lsp.Diagnostic, bool) {
 	return lsp.Diagnostic{}, false
 }
 
+func getFirstLine(text string) (string, bool) {
+	lines := strings.Split(text, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		return line, true
+	}
+	return "", false
+}
+
 func getDiagnosticsForFile(text string) []lsp.Diagnostic {
 	diagnostics := []lsp.Diagnostic{}
-	before, _, found := strings.Cut(text, "\n")
+	firstLine, ok := getFirstLine(text)
 
-	// see if the line starts with a conventional commit type like: feat, fix, ...
-	if !found {
-		diagnose, found := diagnoseNoConventionalCommitMsg(text)
-		if found {
-			diagnostics = append(diagnostics, diagnose)
-		}
-	} else {
-		diagnose, found := diagnoseNoConventionalCommitMsg(before)
+	if ok {
+		// see if the line starts with a conventional commit type like: feat, fix, ...
+		diagnose, found := diagnoseNoConventionalCommitMsg(firstLine)
 		if found {
 			diagnostics = append(diagnostics, diagnose)
 		}

@@ -44,3 +44,33 @@ func TestConventionalCommitPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestGetFirstLine(t *testing.T) {
+	texts := []struct {
+		text string
+		ok   bool
+		line string
+	}{{`# this is the best thing I have ever done
+# lorem ipsum
+# what is love
+# baby don't hurt me
+feat: new commit`, true, "feat: new commit"},
+		{"", false, ""},
+		{"# this is only a comment", false, ""},
+		{"# feat: this is also only a comment", false, ""},
+		{"feat: this is also only a right line with a # comment", true, "feat: this is also only a right line with a # comment"},
+		{`# this is a comment
+
+feat: this is also only a right line with a # comment`, true, ""},
+	}
+	for idx, tc := range texts {
+		expected := "feat: new commit"
+		first, ok := getFirstLine(tc.text)
+		if ok != tc.ok {
+			t.Fatalf("Failed at iteration %d; There should be a line found", idx)
+		}
+		if first != tc.line {
+			t.Fatalf("Failed at iteration %d; first line should be this %s", idx, expected)
+		}
+	}
+}
