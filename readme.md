@@ -95,7 +95,8 @@ We look forward to your contributions!
 
 ## TODO
 
-- [ ] Add all Angular conventional commit message types.
+- [x] Add the optional `!` in the diagnostics regex for breaking changes.
+- [x] Add all Angular conventional commit message types.
 - [ ] Provide customizable linting rules for commit messages.
 - [ ] Integrate with popular editors (Neovim priority).
 - [ ] Extend autocompletion for scopes.

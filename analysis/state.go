@@ -2,9 +2,9 @@ package analysis
 
 import (
 	"cc-lsp/lsp"
-	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 type State struct {
@@ -21,14 +21,13 @@ func NewState() State {
 // conventional commit format
 func diagnoseNoConventionalCommitMsg(text string) (lsp.Diagnostic, bool) {
 	// todo: expand the list to the angular conventional commits
-	prefixes := []string{"feat", "fix", "chore", "test", "docs"}
 	middleRegex := ""
-	for _, item := range prefixes {
+	for _, item := range lsp.Prefixes {
 		middleRegex += regexp.QuoteMeta(item) + "|"
 	}
 
 	// Build the regex pattern dynamically based on the list of prefixes
-	pattern := `^(?:` + middleRegex + `)(?:\(.+\))?:\s+`
+	pattern := `^(?:` + middleRegex + `)(?:\(.+\))?!?:\s+`
 
 	// Compile the regex
 	re := regexp.MustCompile(pattern)
@@ -88,16 +87,73 @@ func (s *State) Hover(id int, uri string, position lsp.Position) lsp.HoverRespon
 	// In real life, this would look up the type in our type analysis code...
 
 	document := s.Documents[uri]
+	line := strings.Split(document, "\n")[position.Line]
+	word := getWord(line, position)
+	content, ok := lsp.HoverContents[word]
+	if ok {
+		return lsp.HoverResponse{
+			Response: lsp.Response{
+				RPC: "2.0",
+				ID:  &id,
+			},
+			Result: lsp.HoverResult{
+				Contents: string(content),
+			},
+		}
 
+	}
+	// for now return empty hover
 	return lsp.HoverResponse{
 		Response: lsp.Response{
 			RPC: "2.0",
 			ID:  &id,
 		},
 		Result: lsp.HoverResult{
-			Contents: fmt.Sprintf("File: %s, Characters: %d", uri, len(document)),
+			Contents: "No Information",
 		},
 	}
+}
+
+func getWord(line string, position lsp.Position) string {
+	// if line is empty there is no word to find
+	if line == "" {
+		return ""
+	}
+	character := position.Character
+	res := string(line[character])
+	// check whether we hit a space
+	if res == " " || !unicode.IsLetter(rune(res[0])) {
+		return res
+	}
+
+	// check whether we are out of bounds
+	if !(character+1 >= len(line)) {
+
+		// go to the end of the word
+		for unicode.IsLetter(rune(line[character+1])) {
+			character += 1
+			res += string(line[character])
+			// check if we are at the end of the line in the next run
+			if character+1 >= len(line) {
+				break
+			}
+		}
+	}
+	// go the other way reset the character position
+	character = position.Character
+	// check for bound again
+	if !(character-1 < 0) {
+		// go to the start of the word
+		for unicode.IsLetter(rune(line[character-1])) {
+			character -= 1
+			res = string(line[character]) + res
+			// check if we are at the start of the line in the next run
+			if character-1 < 0 {
+				break
+			}
+		}
+	}
+	return res
 }
 
 func (s *State) TextDocumentCompletion(id int, uri string) lsp.CompletionResponse {

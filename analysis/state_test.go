@@ -11,13 +11,18 @@ func TestConventionalCommitPrefix(t *testing.T) {
 		line     string
 		expected bool
 	}{
-		{"feat(main): add new feature", false},    // Starts with a conventional prefix
-		{"fix: correct a bug", false},             // Starts with a conventional prefix
-		{"test(stats): clean up codebase", false}, // Starts with a conventional prefix
-		{"doggoo: update documentation", true},    // Does not start with a conventional prefix
-		{"blueberry: change structure", true},     // Does not start with a conventional prefix
-		{"yeet: add unit tests", true},            // Does not start with a conventional prefix
-		{"this is any message", true},             // Does not start with a conventional prefix
+		{"feat(main): add new feature", false},      // Starts with a conventional prefix
+		{"fix: correct a bug", false},               // Starts with a conventional prefix
+		{"test(stats): clean up codebase", false},   // Starts with a conventional prefix
+		{"test(stats)!: clean up codebase", false},  // Starts with a conventional prefix
+		{"test!: clean up codebase", false},         // Starts with a conventional prefix
+		{"!test: update documentation", true},       // Does not start with a conventional prefix
+		{"test!(this): update documentation", true}, // Does not start with a conventional prefix
+		{"doggoo: update documentation", true},      // Does not start with a conventional prefix
+		{"doggoo!: update documentation", true},     // Does not start with a conventional prefix
+		{"blueberry: change structure", true},       // Does not start with a conventional prefix
+		{"yeet: add unit tests", true},              // Does not start with a conventional prefix
+		{"this is any message", true},               // Does not start with a conventional prefix
 	}
 
 	var diagnostics []lsp.Diagnostic
@@ -32,8 +37,8 @@ func TestConventionalCommitPrefix(t *testing.T) {
 		}
 	}
 
-	if len(diagnostics) != 4 {
-		t.Fatalf("diagnostics should be 4 long is %d long", len(diagnostics))
+	if len(diagnostics) != 7 {
+		t.Fatalf("diagnostics should be 7 long is %d long", len(diagnostics))
 	}
 
 	for _, item := range diagnostics {
@@ -76,6 +81,38 @@ feat: this is also only a right line with a # comment`, true, "feat: this is als
 		}
 		if first != tc.line {
 			t.Fatalf("Failed at iteration %d; first line should be this %s", idx, expected)
+		}
+	}
+}
+
+func TestGetWord(t *testing.T) {
+	cases := []struct {
+		line     string
+		position lsp.Position
+		expected string
+	}{
+		{"this is a nice text", lsp.Position{Line: 4, Character: 4}, " "},
+		{"this is a nice text", lsp.Position{Line: 4, Character: 5}, "is"},
+		{"this is a nice text", lsp.Position{Line: 4, Character: 8}, "a"},
+		{"this is a nice text", lsp.Position{Line: 4, Character: 10}, "nice"},
+		{"this is a nice text", lsp.Position{Line: 4, Character: 0}, "this"},
+		{"this is a nice text", lsp.Position{Line: 4, Character: 1}, "this"},
+		{"this is a nice text", lsp.Position{Line: 4, Character: 2}, "this"},
+		{"this is a nice text", lsp.Position{Line: 4, Character: 3}, "this"},
+		{"this is a :nice: text", lsp.Position{Line: 4, Character: 10}, ":"},
+		{"this is a :nice: text", lsp.Position{Line: 4, Character: 11}, "nice"},
+		{"this is a nice: text", lsp.Position{Line: 4, Character: 11}, "nice"},
+		{"this :is a nice: text", lsp.Position{Line: 4, Character: 6}, "is"},
+		{"this :is a nice: text", lsp.Position{Line: 4, Character: 7}, "is"},
+		{"a b c d e f g", lsp.Position{Line: 4, Character: 2}, "b"},
+		{"a b c d e f g", lsp.Position{Line: 4, Character: 0}, "a"},
+		{"", lsp.Position{Line: 4, Character: 3}, ""},
+	}
+
+	for idx, tc := range cases {
+		word := getWord(tc.line, tc.position)
+		if word != tc.expected {
+			t.Fatalf("Test case %d failed. Got %s - Exp %s", idx, word, tc.expected)
 		}
 	}
 }
