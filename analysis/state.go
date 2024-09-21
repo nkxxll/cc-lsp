@@ -159,14 +159,7 @@ func getWord(line string, position lsp.Position) string {
 func (s *State) TextDocumentCompletion(id int, uri string) lsp.CompletionResponse {
 
 	// Ask your static analysis tools to figure out good completions
-	items := []lsp.CompletionItem{
-		{
-			Label:         "Neovim (BTW)",
-			Detail:        "Very cool editor",
-			Documentation: "Fun to watch in videos. Don't forget to like & subscribe to streamers using it :)",
-		},
-	}
-
+	items := lsp.GetCompletions()
 	response := lsp.CompletionResponse{
 		Response: lsp.Response{
 			RPC: "2.0",

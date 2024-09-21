@@ -39,3 +39,22 @@ var Prefixes = []string{
 	"style",
 	"test",
 }
+
+func GetCompletions() []CompletionItem {
+	completions := []CompletionItem{}
+	const keyword = 14
+	for _, item := range Prefixes {
+		documentation, ok := HoverContents[item]
+		if !ok {
+			panic("There is no documentation for the given keyword!")
+		}
+		completion := CompletionItem{
+			Label:         item,
+			Kind:          keyword,
+			Detail:        string(documentation),
+			Documentation: string(documentation),
+		}
+		completions = append(completions, completion)
+	}
+	return completions
+}

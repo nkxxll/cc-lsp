@@ -108,7 +108,7 @@ func handleMessage(logger *log.Logger, writer io.Writer, state analysis.State, m
 	case "textDocument/completion":
 		var request lsp.CompletionRequest
 		if err := json.Unmarshal(contents, &request); err != nil {
-			logger.Printf("textDocument/codeAction: %s", err)
+			logger.Printf("textDocument/completion: %s", err)
 			return
 		}
 
